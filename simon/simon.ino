@@ -1,26 +1,25 @@
+#include <Arduino.h>
 #include <DFRobotDFPlayerMini.h>
 #include <SoftwareSerial.h>
-#include <ESP8266WiFi.h>
 
-#define RX 0
-#define TX 1
+#define RX 9
+#define TX 10
 
-#define BOUT1 2 //PIN mais aussi NOM du fichier audio
-#define BOUT2 3 //PIN mais aussi NOM du fichier audio
-#define BOUT3 4 //PIN mais aussi NOM du fichier audio
-#define BOUT4 5 //PIN mais aussi NOM du fichier audio
+#define BOUT1 0
+#define LED1 1
 
-#define LED1 6
-#define LED2 7
-#define LED3 8
-#define LED4 9
+#define BOUT2 3
+#define LED2 4
+
+#define BOUT3 6
+#define LED3 7
+
+#define BOUT4 12
+#define LED4 13
 
 //======================== Modifiable ========================
 #define CODE 1989
 #define COOLDOWN 500
-
-#define WIFI_SSID "rcpvp"
-#define WIFI_PWD "J'aime le 94"
 //============================================================
 
 
@@ -34,31 +33,27 @@ void setup() {
   Serial.begin(115200);
 
   // Préparation du module de son
-  if(!myDFPlayer.begin(mySerial)) {
+  if(!myDFPlayer.begin(mySerial, true, false)) {
     Serial.println("Module non-fonctionnel. Vérifier la carte et les connection.");
-    while (true); // Bloquage si module non-fonctionnel
+    while (true)
+      delay(0); // Bloquage si module non-fonctionnel
   }
-
-  // Préparation de la connexion
-  myDFPlayer.volume(20);
-  myDFPlayer.play("connexion.mp3"); // Supportés : .mp3 et .wav
-  Serial.print("Connexion au réseau wifi");
-
-  WiFi.begin(WIFI_SSID, WIFI_PWD);
-  while (WiFi.status() != WL_CONNECTED) {
-    Serial.print(".");
-    delay(500);
-  }
-
-  Serial.println("\nConnecté !\n\n");
-  myDFPlayer.play("connecte.mp3");
 
   // Initialisation du jeu
-  lastPlayed = 0;
+  //lastPlayed = 0;
+
+  myDFPlayer.volume(4);
+  for(int i=10;i>0;i--){
+    myDFPlayer.play(i);
+    delay(750);
+  }
+  
+  delay(10000);
 }
 
 void loop() {
   // Son à l'appui sur chaque bouton
+  /*
   digitalWrite(LED1, digitalRead(BOUT1));
   digitalWrite(LED2, digitalRead(BOUT2));
   digitalWrite(LED3, digitalRead(BOUT3));
@@ -85,4 +80,6 @@ void loop() {
       lastPlayed = millis();
     }
   }
+  */
+
 }
