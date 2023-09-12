@@ -1,77 +1,84 @@
-/***************************************************
-DFPlayer - A Mini MP3 Player For Arduino
- <https://www.dfrobot.com/product-1121.html>
- 
- ***************************************************
- This example shows the basic function of library for DFPlayer.
- 
- Created 2016-12-07
- By [Angelo qiao](Angelo.qiao@dfrobot.com)
- 
- GNU Lesser General Public License.
- See <http://www.gnu.org/licenses/> for details.
- All above must be included in any redistribution
- ****************************************************/
-
-/***********Notice and Trouble shooting***************
- 1.Connection and Diagram can be found here
- <https://www.dfrobot.com/wiki/index.php/DFPlayer_Mini_SKU:DFR0299#Connection_Diagram>
- 2.This code is tested on Arduino Uno, Leonardo, Mega boards.
- ****************************************************/
-
-#include "Arduino.h"
-#include "DFRobotDFPlayerMini.h"
-
-#if (defined(ARDUINO_AVR_UNO) || defined(ESP8266))   // Using a soft serial port
+#include <Arduino.h>
+#include <DFRobotDFPlayerMini.h>
 #include <SoftwareSerial.h>
-SoftwareSerial softSerial(/*rx =*/4, /*tx =*/5);
-#define FPSerial softSerial
-#else
-#define FPSerial Serial1
-#endif
 
+//========================== Pinout ==========================
+#define RX 10
+#define TX 11
+
+#define BOUT1 2
+#define LED1 3
+
+#define BOUT2 4
+#define LED2 5
+
+#define BOUT3 6
+#define LED3 7
+
+#define BOUT4 12
+#define LED4 13
+
+//======================== Modifiable ========================
+#define CODE 1989
+#define COOLDOWN 750
+//============================================================
+
+SoftwareSerial soundSerial(RX, TX);
 DFRobotDFPlayerMini myDFPlayer;
 void printDetail(uint8_t type, int value);
+unsigned long lastTime;
+
+
 
 void setup()
 {
-#if (defined ESP32)
-  FPSerial.begin(9600, SERIAL_8N1, /*rx =*/D3, /*tx =*/D2);
-#else
-  FPSerial.begin(9600);
-#endif
-
+  soundSerial.begin(9600);
   Serial.begin(115200);
 
   Serial.println();
-  Serial.println(F("DFRobot DFPlayer Mini Demo"));
-  Serial.println(F("Initializing DFPlayer ... (May take 3~5 seconds)"));
+  Serial.println(F("Initialisation du module..."));
   
-  if (!myDFPlayer.begin(FPSerial, /*isACK = */true, /*doReset = */true)) {  //Use serial to communicate with mp3.
-    Serial.println(F("Unable to begin:"));
-    Serial.println(F("1.Please recheck the connection!"));
-    Serial.println(F("2.Please insert the SD card!"));
-    while(true){
-      delay(0); // Code to compatible with ESP8266 watch dog.
-    }
+  if (!myDFPlayer.begin(soundSerial, true, true)) { // Initialisation du DFPlayer
+    Serial.println(F("Démarage du module impossible. Vérifier la carte et les connections."));
+    while(true)
+      delay(0); // Blocage si non initialisé
+    
   }
-  Serial.println(F("DFPlayer Mini online."));
+  Serial.println(F("DFPlayer Mini prêt."));
   
-  myDFPlayer.volume(10);  //Set volume value. From 0 to 30
-  myDFPlayer.play(1);  //Play the first mp3
+  myDFPlayer.volume(10);  // 0 à 30
+  myDFPlayer.play(1); // Lancement du premier fichier
+  lastTime = millis();
 }
 
 void loop()
 {
-  static unsigned long timer = millis();
-  
-  if (millis() - timer > 3000) {
-    timer = millis();
-    myDFPlayer.next();  //Play next mp3 every 3 second.
+  digitalWrite(LED1, digitalRead(BOUT1));
+  digitalWrite(LED2, digitalRead(BOUT2));
+  digitalWrite(LED3, digitalRead(BOUT3));
+  digitalWrite(LED4, digitalRead(BOUT4));
+
+  if(millis() - lastTime > COOLDOWN) {
+    if(digitalRead(BOUT1) == HIGH) {
+      myDFPlayer.play(1);
+      lastTime = millis();
+    }
+    if(digitalRead(BOUT2) == HIGH) {
+      myDFPlayer.play(2);
+      lastTime = millis();
+    }
+    if(digitalRead(BOUT3) == HIGH) {
+      myDFPlayer.play(3);
+      lastTime = millis();
+    }
+    if(digitalRead(BOUT4) == HIGH) {
+      myDFPlayer.play(4);
+      lastTime = millis();
+    }
   }
   
   if (myDFPlayer.available()) {
-    printDetail(myDFPlayer.readType(), myDFPlayer.read()); //Print the detail message from DFPlayer to handle different errors and states.
+    printDetail(myDFPlayer.readType(), myDFPlayer.read()); // Affichage détaillé du status du DFPlayer
   }
 }
 
@@ -134,5 +141,4 @@ void printDetail(uint8_t type, int value){
     default:
       break;
   }
-  
 }
