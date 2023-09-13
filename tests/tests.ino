@@ -3,8 +3,8 @@
 #include <SoftwareSerial.h>
 
 //========================== Pinout ==========================
-#define RX 10
-#define TX 11
+#define RX 9
+#define TX 10
 
 #define BOUT1 2
 #define LED1 3
@@ -32,6 +32,18 @@ unsigned long lastTime;
 
 void setup()
 {
+  pinMode(BOUT1, INPUT);
+  pinMode(LED1, OUTPUT);
+
+  pinMode(BOUT2, INPUT);
+  pinMode(LED2, OUTPUT);
+
+  pinMode(BOUT3, INPUT);
+  pinMode(LED3, OUTPUT);
+  
+  pinMode(BOUT4, INPUT);
+  pinMode(LED4, OUTPUT);
+
   soundSerial.begin(9600);
   Serial.begin(115200);
 
@@ -47,32 +59,37 @@ void setup()
   Serial.println(F("DFPlayer Mini prêt."));
   
   myDFPlayer.volume(10);  // 0 à 30
-  myDFPlayer.play(1); // Lancement du premier fichier
+  myDFPlayer.playMp3Folder(10); // Lancement du premier fichier
   lastTime = millis();
 }
 
 void loop()
 {
-  digitalWrite(LED1, digitalRead(BOUT1));
-  digitalWrite(LED2, digitalRead(BOUT2));
-  digitalWrite(LED3, digitalRead(BOUT3));
-  digitalWrite(LED4, digitalRead(BOUT4));
+  //digitalWrite(LED1, digitalRead(BOUT1));
+  //digitalWrite(LED2, digitalRead(BOUT2));
+  //digitalWrite(LED3, digitalRead(BOUT3));
+  //digitalWrite(LED4, digitalRead(BOUT4));
+
+  Serial.println(digitalRead(BOUT1));
+  Serial.println(digitalRead(BOUT2));
+  Serial.println(digitalRead(BOUT3));
+  Serial.println(digitalRead(BOUT4));
 
   if(millis() - lastTime > COOLDOWN) {
     if(digitalRead(BOUT1) == HIGH) {
-      myDFPlayer.play(1);
+      myDFPlayer.playMp3Folder(1);
       lastTime = millis();
     }
-    if(digitalRead(BOUT2) == HIGH) {
-      myDFPlayer.play(2);
+    else if(digitalRead(BOUT2) == HIGH) {
+      myDFPlayer.playMp3Folder(2);
       lastTime = millis();
     }
-    if(digitalRead(BOUT3) == HIGH) {
-      myDFPlayer.play(3);
+    else if(digitalRead(BOUT3) == HIGH) {
+      myDFPlayer.playMp3Folder(3);
       lastTime = millis();
     }
-    if(digitalRead(BOUT4) == HIGH) {
-      myDFPlayer.play(4);
+    else if(digitalRead(BOUT4) == HIGH) {
+      myDFPlayer.playMp3Folder(4);
       lastTime = millis();
     }
   }
