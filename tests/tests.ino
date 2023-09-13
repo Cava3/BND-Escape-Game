@@ -20,7 +20,7 @@
 
 //======================== Modifiable ========================
 #define CODE 1989
-#define COOLDOWN 750
+#define COOLDOWN 600
 //============================================================
 
 SoftwareSerial soundSerial(RX, TX);
