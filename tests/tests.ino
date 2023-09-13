@@ -32,16 +32,16 @@ unsigned long lastTime;
 
 void setup()
 {
-  pinMode(BOUT1, INPUT);
+  pinMode(BOUT1, INPUT_PULLUP);
   pinMode(LED1, OUTPUT);
 
-  pinMode(BOUT2, INPUT);
+  pinMode(BOUT2, INPUT_PULLUP);
   pinMode(LED2, OUTPUT);
 
-  pinMode(BOUT3, INPUT);
+  pinMode(BOUT3, INPUT_PULLUP);
   pinMode(LED3, OUTPUT);
   
-  pinMode(BOUT4, INPUT);
+  pinMode(BOUT4, INPUT_PULLUP);
   pinMode(LED4, OUTPUT);
 
   soundSerial.begin(9600);
@@ -58,38 +58,34 @@ void setup()
   }
   Serial.println(F("DFPlayer Mini prêt."));
   
-  myDFPlayer.volume(10);  // 0 à 30
+  myDFPlayer.volume(15);  // 0 à 30
   myDFPlayer.playMp3Folder(10); // Lancement du premier fichier
   lastTime = millis();
 }
 
 void loop()
 {
-  //digitalWrite(LED1, digitalRead(BOUT1));
-  //digitalWrite(LED2, digitalRead(BOUT2));
-  //digitalWrite(LED3, digitalRead(BOUT3));
-  //digitalWrite(LED4, digitalRead(BOUT4));
-
-  Serial.println(digitalRead(BOUT1));
-  Serial.println(digitalRead(BOUT2));
-  Serial.println(digitalRead(BOUT3));
-  Serial.println(digitalRead(BOUT4));
+  // On inverse tous les HIGH et LOW car on est en INPUT_PULLUP (PULLDOWN n'existe pas sur Arduino Uno)
+  digitalWrite(LED1, HIGH - digitalRead(BOUT1));
+  digitalWrite(LED2, HIGH - digitalRead(BOUT2));
+  digitalWrite(LED3, HIGH - digitalRead(BOUT3));
+  digitalWrite(LED4, HIGH - digitalRead(BOUT4));
 
   if(millis() - lastTime > COOLDOWN) {
-    if(digitalRead(BOUT1) == HIGH) {
+    if(digitalRead(BOUT1) == LOW) {
       myDFPlayer.playMp3Folder(1);
       lastTime = millis();
     }
-    else if(digitalRead(BOUT2) == HIGH) {
+    else if(digitalRead(BOUT2) == LOW) {
+      myDFPlayer.playMp3Folder(1);
+      lastTime = millis();
+    }
+    else if(digitalRead(BOUT3) == LOW) {
+      myDFPlayer.playMp3Folder(7);
+      lastTime = millis();
+    }
+    else if(digitalRead(BOUT4) == LOW) {
       myDFPlayer.playMp3Folder(2);
-      lastTime = millis();
-    }
-    else if(digitalRead(BOUT3) == HIGH) {
-      myDFPlayer.playMp3Folder(3);
-      lastTime = millis();
-    }
-    else if(digitalRead(BOUT4) == HIGH) {
-      myDFPlayer.playMp3Folder(4);
       lastTime = millis();
     }
   }
