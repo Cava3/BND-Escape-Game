@@ -23,8 +23,8 @@ struct BoutonLED {
 #define TX 10
 
 //======================== Modifiable ========================
-#define NCODE 1989
 #define COOLDOWN 600
+#define NCODE 1989
 const char CCODE[4] {BLUE, RED, YELLOW, GREEN};
 //============================================================
 
@@ -39,16 +39,16 @@ void setup()
 {
   BoutonLED simon[4] = {
   // PIN, LED, COLOR, ASSOCIATED NUMBER
-    { 2,  3, RED,    (NCODE%10000)/1000}, //%10_000 comme safeguard
-    { 4,  5, BLUE,   (NCODE%1000)/100},
-    { 6,  7, YELLOW, (NCODE%100)/10},
-    {12, 13, GREEN,  (NCODE%10)/1}
+    { 2,  3, RED,    0},
+    { 4,  5, BLUE,   0},
+    { 6,  7, YELLOW, 0},
+    {12, 13, GREEN,  0}
   };
 
   for(int bouton_i=0; bouton_i<4; bouton_i++){
     for(int ccode_i=0; ccode_i<4; ccode_i++){
       if(simon[bouton_i].color == CCODE[ccode_i])
-        simon[bouton_i].code = (NCODE% (int) pow(10, 4-ccode_i)/ (int) pow(10, 3-ccode_i));
+        simon[bouton_i].code = (NCODE% (int) pow(10, 4-ccode_i))/ (int) pow(10, 3-ccode_i); // (abcd % 10^4) / 10^3 = a
     }
 
     pinMode(simon[bouton_i].boutPin, INPUT_PULLUP);
