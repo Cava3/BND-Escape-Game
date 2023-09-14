@@ -19,63 +19,76 @@ struct BoutonLED {
 
 
 //========================== Pinout ==========================
-#define RX 9
-#define TX 10
+#define RX 0
+#define TX 1
 
 //======================== Modifiable ========================
 #define COOLDOWN 600
-#define NCODE 1989
-const char CCODE[4] {BLUE, RED, YELLOW, GREEN};
+#define NCODE 1712
+const char CCODE[4] {RED, YELLOW, BLUE, GREEN};
 //============================================================
 
 SoftwareSerial soundSerial(RX, TX);
 DFRobotDFPlayerMini myDFPlayer;
-void printDetail(uint8_t type, int value);
+void handleDetail(uint8_t type, int value);
 unsigned long lastTime;
+int res_state;
+int playing;
 
-BoutonLED simon[4];
+BoutonLED simon[4] = {
+  // PIN, LED, COLOR, ASSOCIATED NUMBER
+    (BoutonLED) { 3,  4, RED,    0},
+    (BoutonLED) { 6,  7, BLUE,   0},
+    (BoutonLED) { 9,  10, YELLOW, 0},
+    (BoutonLED) {12, 13, GREEN,  0}
+  };
 
 void setup()
 {
-  BoutonLED simon[4] = {
-  // PIN, LED, COLOR, ASSOCIATED NUMBER
-    { 2,  3, RED,    0},
-    { 4,  5, BLUE,   0},
-    { 6,  7, YELLOW, 0},
-    {12, 13, GREEN,  0}
-  };
+  soundSerial.begin(9600);
 
   for(int bouton_i=0; bouton_i<4; bouton_i++){
     for(int ccode_i=0; ccode_i<4; ccode_i++){
-      if(simon[bouton_i].color == CCODE[ccode_i])
-        simon[bouton_i].code = (NCODE% (int) pow(10, 4-ccode_i))/ (int) pow(10, 3-ccode_i); // (abcd % 10^4) / 10^3 = a
+      if(simon[bouton_i].color == CCODE[ccode_i]){
+        simon[bouton_i].code = (int) (NCODE / pow(10, 3-ccode_i)) % 10; // (abcd / 10^2)%10 = b
+      }
     }
 
     pinMode(simon[bouton_i].boutPin, INPUT_PULLUP);
     pinMode(simon[bouton_i].LEDPin,  OUTPUT);
   }
 
-  soundSerial.begin(9600);
-  Serial.begin(115200);
 
-  Serial.println();
-  Serial.println(F("Initialisation du module..."));
+  // Serial.println();
+  // Serial.println(F("Initialisation du module..."));
   
   if (!myDFPlayer.begin(soundSerial, true, true)) { // Initialisation du DFPlayer
-    Serial.println(F("Démarage du module impossible. Vérifier la carte et les connections."));
+    // Serial.println(F("Démarage du module impossible. Vérifier la carte et les connections."));
     while(true)
       delay(0); // Blocage si non initialisé
     
   }
-  Serial.println(F("DFPlayer Mini prêt."));
+  // Serial.println(F("DFPlayer Mini prêt."));
   
   myDFPlayer.volume(15);  // 0 à 30
-  myDFPlayer.playMp3Folder(10); // Lancement du premier fichier
+  myDFPlayer.playMp3Folder(10); // TODO : Son lancement
+
   lastTime = millis();
+  res_state = 0;
+  playing = 0; // Valeur par defaut
 }
 
 void loop()
 {
+
+  if(res_state >= 4){
+    if(millis()-lastTime > COOLDOWN){
+      myDFPlayer.playMp3Folder((int) (NCODE / pow(10, 3- (++playing))) % 10);
+      lastTime = millis();
+    }
+    return;
+  }
+
   // On inverse tous les HIGH et LOW car on est en INPUT_PULLUP (PULLDOWN n'existe pas sur Arduino Uno)
   // Les LEDs réagissent en temps réel aux appuis sur les boutons
   for(int bouton_i=0 ; bouton_i < 4 ; bouton_i++)
@@ -87,67 +100,77 @@ void loop()
       if(digitalRead(simon[bouton_i].boutPin) == LOW) {
         myDFPlayer.playMp3Folder(simon[bouton_i].code);
         lastTime = millis();
+
+        if(simon[bouton_i].color == CCODE[res_state]){
+          res_state++;
+
+          if(res_state >= 4){
+            myDFPlayer.playMp3Folder(10); // TODO : Son réussite
+            lastTime = millis();
+          }
+        }
+
         break;
       }
     }
   }
   
   if (myDFPlayer.available()) {
-    printDetail(myDFPlayer.readType(), myDFPlayer.read()); // Affichage détaillé du status du DFPlayer
+    handleDetail(myDFPlayer.readType(), myDFPlayer.read()); // Affichage détaillé du status du DFPlayer
   }
 }
 
-void printDetail(uint8_t type, int value){
+void handleDetail(uint8_t type, int value){
   switch (type) {
     case TimeOut:
-      Serial.println(F("Time Out!"));
+      // Serial.println(F("Time Out!"));
       break;
     case WrongStack:
-      Serial.println(F("Stack Wrong!"));
+      // Serial.println(F("Stack Wrong!"));
       break;
     case DFPlayerCardInserted:
-      Serial.println(F("Card Inserted!"));
+      // Serial.println(F("Card Inserted!"));
       break;
     case DFPlayerCardRemoved:
-      Serial.println(F("Card Removed!"));
+      // Serial.println(F("Card Removed!"));
       break;
     case DFPlayerCardOnline:
-      Serial.println(F("Card Online!"));
+      // Serial.println(F("Card Online!"));
       break;
     case DFPlayerUSBInserted:
-      Serial.println("USB Inserted!");
+      // Serial.println("USB Inserted!");
       break;
     case DFPlayerUSBRemoved:
-      Serial.println("USB Removed!");
+      // Serial.println("USB Removed!");
       break;
     case DFPlayerPlayFinished:
-      Serial.print(F("Number:"));
-      Serial.print(value);
-      Serial.println(F(" Play Finished!"));
+      // Serial.print(F("Number:"));
+      // Serial.print(value);
+      // Serial.println(F(" Play Finished!"));
       break;
     case DFPlayerError:
-      Serial.print(F("DFPlayerError:"));
+      // Serial.print(F("DFPlayerError:"));
       switch (value) {
         case Busy:
-          Serial.println(F("Card not found"));
+          // Serial.println(F("Card not found"));
           break;
         case Sleeping:
-          Serial.println(F("Sleeping"));
+          // Serial.println(F("Sleeping"));
           break;
         case SerialWrongStack:
-          Serial.println(F("Get Wrong Stack"));
+          // Serial.println(F("Get Wrong Stack"));
           break;
         case CheckSumNotMatch:
-          Serial.println(F("Check Sum Not Match"));
+          // Serial.println(F("Check Sum Not Match"));
           break;
         case FileIndexOut:
-          Serial.println(F("File Index Out of Bound"));
+          // Serial.println(F("File Index Out of Bound"));
           break;
         case FileMismatch:
-          Serial.println(F("Cannot Find File"));
+          // Serial.println(F("Cannot Find File"));
           break;
         case Advertise:
-          Serial.println(F("In Advertise"));
+          // Serial.println(F("In Advertise"));
           break;
         default:
           break;
