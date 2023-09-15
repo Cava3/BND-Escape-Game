@@ -24,7 +24,7 @@ struct BoutonLED {
 
 //======================== Modifiable ========================
 #define COOLDOWN 600
-#define NCODE 1712
+#define NCODE 1812
 const char CCODE[4] {RED, YELLOW, BLUE, GREEN};
 //============================================================
 
@@ -71,7 +71,7 @@ void setup()
   // Serial.println(F("DFPlayer Mini prêt."));
   
   myDFPlayer.volume(15);  // 0 à 30
-  myDFPlayer.playMp3Folder(10); // TODO : Son lancement
+  myDFPlayer.playMp3Folder(11); // Son lancement
 
   lastTime = millis();
   res_state = 0;
@@ -80,13 +80,19 @@ void setup()
 
 void loop()
 {
+  // A la réussite, relire le code.
+  // if(res_state >= 4){
+  //   if(millis()-lastTime > COOLDOWN){
+  //     myDFPlayer.playMp3Folder((int) (NCODE / pow(10, 3- (++playing))) % 10);
+  //     lastTime = millis();
+  //   }
+  //   return;
+  // }
 
-  if(res_state >= 4){
-    if(millis()-lastTime > COOLDOWN){
-      myDFPlayer.playMp3Folder((int) (NCODE / pow(10, 3- (++playing))) % 10);
-      lastTime = millis();
-    }
-    return;
+  if(res_state >= 4 && millis()-lastTime > COOLDOWN){
+    myDFPlayer.playMp3Folder(10); // Son réussite
+    lastTime = millis();
+    res_state = 0;
   }
 
   // On inverse tous les HIGH et LOW car on est en INPUT_PULLUP (PULLDOWN n'existe pas sur Arduino Uno)
@@ -101,14 +107,12 @@ void loop()
         myDFPlayer.playMp3Folder(simon[bouton_i].code);
         lastTime = millis();
 
-        if(simon[bouton_i].color == CCODE[res_state]){
-          res_state++;
+        // Attention cas particulier du premier nombre
+        if(simon[bouton_i].color != CCODE[res_state])
+          res_state = 0;
 
-          if(res_state >= 4){
-            myDFPlayer.playMp3Folder(10); // TODO : Son réussite
-            lastTime = millis();
-          }
-        }
+        if(simon[bouton_i].color == CCODE[res_state])
+          res_state++;
 
         break;
       }
